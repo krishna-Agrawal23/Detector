@@ -55,16 +55,17 @@
     std::string pathToWatch = "A:\\Downloads\\Chrome";          // Change this path!
 
 ### 3. Build the Project
-- Use CMake to generate the build files and compile the source code.
+
+### Use CMake to generate the build files and compile the source code.
 
       Create a build directory
       mkdir build
       cd build
 
-    # Generate the build files
+ ### Generate the build files
       cmake ..
 
-    # Compile the project
+### Compile the project
       cmake --build .
 
 ### This will create <mark>Detector.exe</mark> inside the <mark>build/Debug</mark> directory.
@@ -88,7 +89,7 @@ The application is now running and monitoring your specified folder.
 
 ### 2. Use an online tool or a local utility to find the SHA256 hash of this empty file. The hash for a completely empty file is:
 
-        e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+     e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 
 ### 3. Ensure this hash is present in your signatures.db file.
 
