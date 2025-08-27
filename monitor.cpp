@@ -10,6 +10,38 @@
 #include <windows.h>
 #endif
 
+std::string getFileType(const std::string& filename) {
+    size_t dot_pos = filename.rfind('.');
+    if (dot_pos == std::string::npos) {
+        return "a file"; 
+    }
+
+    std::string ext = filename.substr(dot_pos);
+    std::transform(ext.begin(), ext.end(), ext.begin(),
+        [](unsigned char c){ return std::tolower(c); });
+
+    if (ext == ".exe" || ext == ".msi" || ext == ".bat" || ext == ".com") {
+        return "an Application";
+    }
+    if (ext == ".jpg" || ext == ".jpeg" || ext == ".png" || ext == ".gif" || ext == ".bmp" || ext == ".svg") {
+        return "an Image";
+    }
+    if (ext == ".mp4" || ext == ".avi" || ext == ".mkv" || ext == ".mov" || ext == ".wmv") {
+        return "a Video";
+    }
+    if (ext == ".mp3" || ext == ".wav" || ext == ".aac" || ext == ".flac") {
+        return "an Audio File";
+    }
+    if (ext == ".zip" || ext == ".rar" || ext == ".7z") {
+        return "an Archive";
+    }
+    if (ext == ".pdf" || ext == ".docx" || ext == ".txt" || ext == ".pptx" || ext == ".xlsx") {
+        return "a Document";
+    }
+
+    return "a FILE"; // Default case
+}
+
 Monitor::Monitor(const std::string& path, std::shared_ptr<Scanner> scanner)
     : path_to_watch(path), file_scanner(scanner) {}
 
@@ -67,10 +99,10 @@ void Monitor::start() {
                     Sleep(1000); // Wait for the file to be fully written
 
                     if (file_scanner->isMalware(full_path)) {
-                        std::string message = "Malware has been detected in the following file:\n\n" + full_path;
+                       std::string message = "Looks like you downloaded " + fileType + " AND IT CONTAINS A MALWARE :\n\n" + filename;
                         MessageBoxA(NULL, message.c_str(), "!!! MALWARE ALERT !!!", MB_OK | MB_ICONERROR);
                     } else {
-                        std::string message = "The following file is safe:\n\n" + full_path;
+                        std::string message = "It looks like you downloaded " + fileType + " and it is safe from malwares.\n\nFile: " + filename;
                         MessageBoxA(NULL, message.c_str(), "File Scan Complete", MB_OK | MB_ICONINFORMATION);
                     }
                 }
@@ -85,5 +117,7 @@ void Monitor::start() {
 #endif
 }
 
+
 // Updated the whole code so that the user gets a "POP UP MESSAGE" instead the safe and virus detection alert happening in the terminal...
 // Changed the main.cpp file to hide the console in the background and it can work silently in the user system...
+
