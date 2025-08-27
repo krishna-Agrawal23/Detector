@@ -78,7 +78,7 @@
       copy ..\..\signatures.db .
 
 #### 3 Run the executable:
-      Detector.exe
+      MalwareDetector.exe
 
 The application is now running and monitoring your specified folder.
 
@@ -95,8 +95,8 @@ The application is now running and monitoring your specified folder.
 
 ### 4. Copy <mark>virus.txt</mark> into the directory you are monitoring.
 
-### 5. The console window running the detector should immediately print a <mark>!!! MALWARE DETECTED !!!</mark> message.
+### 5. A Pop Up Window will appear the moment you dowload any type File from the internet and will give you a alert if that file contains a virus or if it is safe...
 
-## ⚠️ Disclaimer
+## ⚠️ Disclaimer....
 ### This is a proof-of-concept project and is not intended for real-world security protection. It lacks many features of a commercial antivirus, such as heuristic analysis, sandboxing, and a comprehensive, auto-updating signature database.
 
