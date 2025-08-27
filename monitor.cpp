@@ -2,6 +2,9 @@
 #include <iostream>
 #include <vector>
 #include <stdexcept>
+#include <string>
+#include <algorithm> // Required for std::transform
+#include <cctype>    // Required for std::tolower
 
 #ifdef _WIN32
 #include <windows.h>
@@ -21,51 +24,57 @@ void Monitor::start() {
         FILE_FLAG_BACKUP_SEMANTICS,
         NULL
     );
-
     if (hDir == INVALID_HANDLE_VALUE) {
-        throw std::runtime_error("Failed to get handle to directory.");
+        throw std::runtime_error("Failed to get handle to directory. Check path and permissions.");
     }
-
-    const int buffer_size = 1024;
+    const int buffer_size = 4096;
     std::vector<BYTE> buffer(buffer_size);
     DWORD bytes_returned = 0;
-
     while (true) {
         if (ReadDirectoryChangesW(
-            hDir,
-            buffer.data(),
-            buffer_size,
-            TRUE,
+            hDir, buffer.data(), buffer_size, TRUE,
             FILE_NOTIFY_CHANGE_FILE_NAME,
-            &bytes_returned,
-            NULL,
-            NULL
+            &bytes_returned, NULL, NULL
         )) {
             BYTE* pInfo = buffer.data();
             while (pInfo) {
                 FILE_NOTIFY_INFORMATION& fni = *reinterpret_cast<FILE_NOTIFY_INFORMATION*>(pInfo);
-                
                 if (fni.Action == FILE_ACTION_ADDED || fni.Action == FILE_ACTION_RENAMED_NEW_NAME) {
                     std::wstring w_filename(fni.FileName, fni.FileNameLength / sizeof(WCHAR));
-                    
                     int size_needed = WideCharToMultiByte(CP_UTF8, 0, &w_filename[0], (int)w_filename.size(), NULL, 0, NULL, NULL);
                     std::string filename(size_needed, 0);
                     WideCharToMultiByte(CP_UTF8, 0, &w_filename[0], (int)w_filename.size(), &filename[0], size_needed, NULL, NULL);
 
-                    std::string full_path = path_to_watch + "\\" + filename;
+                    std::string extension = "";
+                    size_t dot_pos = filename.rfind('.');
+                    if (dot_pos != std::string::npos) {
+                        extension = filename.substr(dot_pos);
+                        std::transform(extension.begin(), extension.end(), extension.begin(),
+                            [](unsigned char c){ return std::tolower(c); });
+                    }
 
-                    Sleep(1000);
+                    if (extension == ".crdownload" || extension == ".tmp") {
+                        std::cout << "Ignoring temporary download file: " << filename << std::endl;
+                        if (fni.NextEntryOffset == 0) break;
+                        pInfo += fni.NextEntryOffset;
+                        continue; 
+                    }
+
+                    std::string full_path = path_to_watch + "\\" + filename;
+                    
+                    std::cout << "Scanning new file: " << full_path << std::endl;
+                    
+                    Sleep(1000); // Wait for the file to be fully written
 
                     if (file_scanner->isMalware(full_path)) {
-                        std::cout << "!!! MALWARE DETECTED !!! -> " << full_path << std::endl;
+                        std::string message = "Malware has been detected in the following file:\n\n" + full_path;
+                        MessageBoxA(NULL, message.c_str(), "!!! MALWARE ALERT !!!", MB_OK | MB_ICONERROR);
                     } else {
-                        std::cout << "File is clean: " << full_path << std::endl;
+                        std::string message = "The following file is safe:\n\n" + full_path;
+                        MessageBoxA(NULL, message.c_str(), "File Scan Complete", MB_OK | MB_ICONINFORMATION);
                     }
                 }
-
-                if (fni.NextEntryOffset == 0) {
-                    break;
-                }
+                if (fni.NextEntryOffset == 0) break;
                 pInfo += fni.NextEntryOffset;
             }
         }
@@ -75,3 +84,6 @@ void Monitor::start() {
     throw std::runtime_error("File monitoring is only implemented for Windows in this version.");
 #endif
 }
+
+// Updated the whole code so that the user gets a "POP UP MESSAGE" instead the safe and virus detection alert happening in the terminal...
+// Changed the main.cpp file to hide the console in the background and it can work silently in the user system...
